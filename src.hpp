@@ -13,6 +13,7 @@ NFA MakeQuestion(const char &character);
 NFA Concatenate(const NFA &nfa1, const NFA &nfa2);
 NFA Union(const NFA &nfa1, const NFA &nfa2);
 NFA MakeSimple(const char &character);
+NFA MakeEpsilon();
 /*!
   \brief This class is used to store the type of the transition.
   \details You can use it like this:
@@ -126,6 +127,7 @@ public:
   friend NFA MakeSimple(const char &character);
   friend NFA Concatenate(const NFA &nfa1, const NFA &nfa2);
   friend NFA Union(const NFA &nfa1, const NFA &nfa2);
+  friend NFA MakeEpsilon();
 };
 class RegexChecker {
 private:
@@ -161,12 +163,7 @@ private:
     }
     // If sequence is empty, create an epsilon NFA (matches empty)
     if (!has) {
-      NFA eps;
-      eps.start = 0;
-      eps.ends.clear();
-      eps.ends.insert(0);
-      eps.transitions.assign(1, std::vector<Transition>());
-      return eps;
+      return MakeEpsilon();
     }
     return result;
   }
@@ -179,7 +176,7 @@ public:
   */
   bool Check(const std::string &str) const {
     std::unordered_set<int> cur;
-    cur.insert(nfa.start);
+    cur.insert(nfa.GetStart());
     for (char ch : str) {
       cur = nfa.Advance(cur, ch);
       if (cur.empty()) return false;
@@ -192,7 +189,6 @@ public:
     \brief This is used to build the NFA from the regex string.
   */
   RegexChecker(const std::string &regex) {
-    // Split by '|' (no parentheses, so flat)
     std::vector<std::string> parts;
     std::string cur;
     for (char ch : regex) {
@@ -341,4 +337,14 @@ NFA MakeSimple(const char &character) {
   nfa.transitions[0].push_back({t, 1});
   return nfa;
 }
+
+NFA MakeEpsilon() {
+  NFA nfa;
+  nfa.start = 0;
+  nfa.ends.clear();
+  nfa.ends.insert(0);
+  nfa.transitions.assign(1, std::vector<Transition>());
+  return nfa;
+}
 } // namespace Grammar
+
